@@ -1,0 +1,160 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>SmartRoad AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Intelligent Road Planning and Decision Support System">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eaf3f8;--card:rgba(255,255,255,.7);--tx:#0f2a3d;--mu:#5b7387;--bd:rgba(15,80,120,.15);--pri:#0b6fb8;--ok:#14a36b;--bad:#d64545;--warn:#e0a31a}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#08141f;--card:rgba(20,40,58,.7);--tx:#e5f1f8;--mu:#8aa4b8;--bd:rgba(120,190,230,.18)}}
+:root[data-theme=dark]{--bg:#08141f;--card:rgba(20,40,58,.7);--tx:#e5f1f8;--mu:#8aa4b8;--bd:rgba(120,190,230,.18)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at 10% 0,rgba(20,163,107,.18),transparent 40%),radial-gradient(circle at 90% 10%,rgba(11,111,184,.2),transparent 45%),var(--bg);color:var(--tx);min-height:100vh}
+.card{background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--bd);border-radius:14px;padding:14px;animation:in .5s both}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+header{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;flex-wrap:wrap}
+h1{font-size:18px;margin:0}h1 small{display:block;font-weight:400;color:var(--mu);font-size:12px}
+h2{font-size:14px;margin:0 0 8px}main{padding:0 18px 24px;display:grid;gap:12px;max-width:1300px;margin:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi b{display:block;font-size:20px;margin-top:2px}.kpi span{color:var(--mu);font-size:12px}
+.g2{display:grid;grid-template-columns:3fr 2fr;gap:12px}@media(max-width:900px){.g2{grid-template-columns:1fr}}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+button{cursor:pointer;background:var(--pri);color:#fff;border:0}button.alt{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+label{display:block;font-size:12px;color:var(--mu);margin:6px 0 2px}input[type=range]{width:100%;padding:0}
+svg{width:100%;height:auto;display:block}.bar{height:10px;border-radius:6px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%;transition:width .5s}
+.row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px}.row .l{width:92px;color:var(--mu)}.row .bar{flex:1}
+.ex{max-height:300px;overflow:auto;display:grid;gap:6px}.ex div{padding:8px;border-radius:8px;border-left:3px solid var(--ok);background:var(--bd);font-size:12.5px}.ex .r{border-color:var(--bad)}
+.tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;background:var(--bd)}
+#chat{height:190px;overflow:auto;display:grid;align-content:start;gap:6px;margin-bottom:6px}#chat p{margin:0;padding:7px 10px;border-radius:10px;background:var(--bd);max-width:92%}#chat .u{justify-self:end;background:var(--pri);color:#fff}
+#login{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:var(--bg)}#login .card{width:min(380px,92vw);text-align:center}
+#tip{position:fixed;pointer-events:none;background:#0f2a3d;color:#fff;padding:6px 9px;border-radius:8px;font-size:12px;display:none;z-index:5}
+</style></head><body>
+<div id="login"><div class="card"><div style="font-size:34px">🛣️</div><h1 style="font-size:24px">SmartRoad AI<small>Intelligent Road Planning and Decision Support System</small></h1><br>
+<div style="text-align:left"><label for="lu">Officer ID</label><input id="lu" autocomplete="username" style="width:100%" onkeydown="if(event.key=='Enter')login()">
+<label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password" style="width:100%" onkeydown="if(event.key=='Enter')login()"></div>
+<p id="lerr" role="alert" style="color:var(--bad);font-size:12.5px;min-height:18px;margin:8px 0"></p>
+<button onclick="login()">Login</button> <button class="alt" onclick="enterDemo()">Demo Mode</button> <button class="alt" onclick="theme()">◐</button>
+<p style="font-size:11px;color:var(--mu)">Demo credentials: officer / smartroad123</p></div></div>
+<header class="card" style="border-radius:0 0 14px 14px"><h1>🛣️ SmartRoad AI<small>Dept. of Rural Development · Road Construction Planning</small></h1>
+<div><button id="animBtn" onclick="animateMST()">▶ Animate MST</button> <button class="alt" onclick="exportJSON()">Export JSON</button> <button class="alt" onclick="reset()">Reset</button> <span id="who" class="tag"></span> <button class="alt" onclick="logout()">Logout</button> <button class="alt" onclick="theme()">◐ Theme</button></div></header>
+<main>
+<div class="kpis" id="kpis"></div>
+<div class="g2"><div class="card"><h2>Road Network (green = selected, red = rejected)</h2><div id="cap" class="tag" style="display:none;margin:0 0 8px;padding:6px 10px;font-size:12.5px"></div><svg id="map" viewBox="0 0 700 440"></svg>
+<label><input type="checkbox" id="showRej" checked onchange="render()"> Show rejected roads</label></div>
+<div class="card"><h2>What‑If Simulation</h2>
+<label>Budget (₹ lakh): <b id="bv"></b></label><input type="range" id="budget" min="20" max="200" value="90" oninput="render()">
+<label>Road cost multiplier: <b id="cv"></b></label><input type="range" id="mult" min="0.5" max="2" step="0.05" value="1" oninput="render()">
+<label>Weather severity: <b id="wv"></b>%</label><input type="range" id="wx" min="0" max="100" value="0" oninput="render()">
+<label>Min road quality: <b id="qv"></b></label><input type="range" id="minq" min="1" max="8" value="1" oninput="render()">
+<h2 style="margin-top:12px">Budget</h2><div class="bar"><i id="bb"></i></div><div id="bt" style="margin-top:6px;font-size:12.5px"></div></div></div>
+<div class="g3">
+<div class="card"><h2>🤖 AI Explanation Engine</h2><div class="ex" id="ex"></div></div>
+<div class="card"><h2>Priority Planner</h2><div id="pri"></div><h2 style="margin-top:12px">Weather &amp; Flood Alerts</h2><div id="wxl"></div></div>
+<div class="card"><h2>🌿 Environmental Analysis</h2><div id="env"></div><h2 style="margin-top:12px">Future Expansion</h2><div id="fut"></div></div>
+<div class="card"><h2>Live Analytics</h2><div id="an"></div></div>
+<div class="card"><h2>Add Road</h2><select id="ra"></select> → <select id="rb"></select>
+<label>Cost (₹ lakh)</label><input id="rc" type="number" value="10"><label>Flood risk %</label><input id="rf" type="number" value="20"><br><br><button onclick="addRoad()">Add &amp; Re‑plan</button><p id="msg" style="font-size:12.5px"></p><h2 style="margin-top:10px">All Roads</h2><div class="ex" id="rl" style="max-height:170px;display:block"></div></div>
+<div class="card"><h2>💬 AI Assistant</h2><div id="chat"><p>Ask me: "Why was Ashoka–Bhavani selected?", "How can I save money?", "Future expenses?"</p></div><input id="chatq" placeholder="Ask about the plan…" style="width:70%" onkeydown="if(event.key=='Enter')ask()"> <button onclick="ask()">Ask</button></div>
+</div></main><div id="tip"></div>
+<script>
+// ---------- Sample dataset (units: ₹ lakh, km) ----------
+const V0=[["Ashoka",5200,90,80,1,1,0,0],["Bhavani",2100,260,50,0,1,0,0],["Chandrapur",8400,430,90,1,1,1,1],["Devgad",900,600,70,0,0,0,0],["Eklavya",3100,150,230,0,1,0,0],["Faridpur",1500,330,200,0,0,1,0],["Gokul",4700,520,260,1,1,0,1],["Hanuman",700,640,380,0,0,0,0],["Indrapuri",2600,240,370,0,1,0,0]].map((a,i)=>({id:i,n:a[0],p:a[1],x:a[2],y:a[3],h:a[4],s:a[5],i:a[6],e:a[7]}));
+const R0=[[0,1,12,7,20,2,14],[0,4,15,6,45,3,17],[1,2,14,8,25,2,16],[1,5,13,6,60,3,15],[1,4,18,5,30,3,19],[2,3,11,7,35,2,13],[2,6,16,7,70,3,18],[2,5,15,6,25,3,17],[3,6,20,4,55,4,22],[3,7,24,5,40,4,26],[4,5,14,7,15,2,15],[4,8,16,6,50,3,17],[5,6,12,8,30,2,14],[5,8,17,5,65,4,18],[6,7,13,6,45,3,15],[8,7,28,4,25,5,30]].map(a=>({a:a[0],b:a[1],cost:a[2],q:a[3],fl:a[4],m:a[5],len:a[6]}));
+let V=JSON.parse(JSON.stringify(V0)),R=JSON.parse(JSON.stringify(R0)),S=null,reveal=null;
+const $=id=>document.getElementById(id),nm=i=>V[i].n,sc=v=>v.p/1000+(v.h?5:0)+(v.s?3:0)+(v.i?3:0)+(v.e?6:0);
+const theme=()=>{const r=document.documentElement,d=(r.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))=='dark';r.dataset.theme=d?'light':'dark'};
+// ---------- Login (client-side DEMO only: real security needs a server, e.g. FastAPI + JWT) ----------
+const USERS={officer:'smartroad123',admin:'admin@123'};
+const store={get:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}},del:k=>{try{sessionStorage.removeItem(k)}catch(e){}}};
+function showApp(user){$('login').style.display='none';$('who').textContent='👤 '+user;$('lerr').textContent=''}
+function login(){const u=$('lu').value.trim(),p=$('lp').value;
+ if(!u||!p)return $('lerr').textContent='Please enter both Officer ID and password.';
+ if(!Object.hasOwn(USERS,u)||USERS[u]!==p){$('lp').value='';return $('lerr').textContent='Invalid Officer ID or password.'}
+ store.set('user',u);showApp(u)}
+function enterDemo(){store.set('user','Demo');showApp('Demo')}
+function logout(){store.del('user');$('lu').value=$('lp').value='';$('login').style.display='grid';$('lu').focus()}
+if(store.get('user'))showApp(store.get('user'));
+// ---------- Kruskal + Union-Find ----------
+function solve(){
+ const mult=+$('mult').value,wx=+$('wx').value/100,minq=+$('minq').value;
+ const E=R.map((r,i)=>({...r,i,eff:r.cost*mult*(1+r.fl/100*wx*0.5)+(r.q<minq?1e3:0)})).sort((x,y)=>x.eff-y.eff);
+ const t0=performance.now(),par=V.map((_,i)=>i),find=x=>par[x]==x?x:(par[x]=find(par[x]));
+ const sel=[],rej=[],adj=V.map(()=>[]);
+ const path=(s,t)=>{const prev={[s]:-1},q=[s];while(q.length){const u=q.shift();if(u==t)break;adj[u].forEach(w=>{if(!(w in prev)){prev[w]=u;q.push(w)}})}const p=[];let c=t;while(c!=-1&&c!==undefined){p.unshift(c);c=prev[c]}return p};
+ E.forEach(e=>{const ra=find(e.a),rb=find(e.b);
+  if(ra!=rb){par[ra]=rb;adj[e.a].push(e.b);adj[e.b].push(e.a);sel.push(e)}
+  else{e.why=`Creates a cycle: ${path(e.a,e.b).map(nm).join(' → ')} are already linked. `+(e.fl>50?'It also has high flood risk. ':'')+(e.q<5?'Road quality is poor. ':'')+(e.eff>sel.at(-1).eff?'It is more expensive than the existing link. ':'');rej.push(e)}});
+ const ms=performance.now()-t0,total=sel.reduce((s,e)=>s+e.eff,0),all=R.reduce((s,e)=>s+e.cost,0);
+ // alternatives for risky selected roads: cheapest other edge crossing the cut
+ sel.forEach(e=>{const sa=sel.filter(x=>x!==e),p=V.map((_,i)=>i),f=x=>p[x]==x?x:(p[x]=f(p[x]));sa.forEach(x=>p[f(x.a)]=f(x.b));
+  e.alt=E.filter(x=>x!==e&&f(x.a)==f(e.a)&&f(x.b)==f(e.b)||x!==e&&f(x.a)==f(e.b)&&f(x.b)==f(e.a)).sort((u,v)=>u.fl-v.fl)[0];
+  const small=V[e.a].p<V[e.b].p?V[e.a]:V[e.b];
+  e.rs=[sc(V[e.a])+sc(V[e.b])>12?'serves a high‑priority village':'', e.eff<=sel[Math.min(2,sel.length-1)].eff?'one of the lowest‑cost links':'cheapest link that joins two separate regions',`connects ${small.n} (pop. ${small.p}) to the network`,e.q>=7?'good road quality':'',e.m<=2?'low maintenance':'',e.fl>60?'⚠ high flood risk':''].filter(Boolean)});
+ const connected=new Set(sel.flatMap(e=>[e.a,e.b])).size;
+ S={sel,rej,total,all,saved:all-total,ms,connected,E};
+}
+// ---------- Rendering ----------
+const fmt=n=>(+n).toFixed(1);
+function render(){
+ solve();const bud=+$('budget').value;$('bv').textContent=bud;$('cv').textContent=$('mult').value;$('wv').textContent=$('wx').value;$('qv').textContent=$('minq').value;
+ const {sel,rej,total,saved,connected,ms}=S,len=sel.reduce((s,e)=>s+e.len,0),risk=sel.reduce((s,e)=>s+e.fl,0)/(sel.length||1),trees=len*120,co2=len*85,green=Math.max(0,Math.round(100-len/3-sel.filter(e=>e.fl>60).length*2)),shortage=Math.max(0,total-bud);
+ $('kpis').innerHTML=[['Villages',V.length],['Roads Available',R.length],['Roads Selected',sel.length],['Total Cost','₹'+fmt(total)+'L'],['Money Saved','₹'+fmt(saved)+'L'],['Budget Remaining','₹'+fmt(Math.max(0,bud-total))+'L'],['Risk Score',fmt(risk)+'/100'],['Environmental',green+'/100'],['Connected',connected+'/'+V.length],['Runtime',ms.toFixed(2)+' ms']].map(k=>`<div class="card kpi"><span>${k[0]}</span><b>${k[1]}</b></div>`).join('');
+ const used=Math.min(100,total/bud*100);$('bb').style.width=used+'%';$('bb').style.background=shortage?'var(--bad)':used>85?'var(--warn)':'var(--ok)';
+ $('bt').innerHTML=`Required: <b>₹${fmt(total)}L</b> · Remaining: <b>₹${fmt(Math.max(0,bud-total))}L</b> · Shortage: <b style="color:${shortage?'var(--bad)':'inherit'}">₹${fmt(shortage)}L</b> · Saved vs. all roads: <b>₹${fmt(saved)}L</b>`+(shortage?`<br>💡 Phase the build: complete priority roads first (see Priority Planner).`:'');
+ // map
+ const shown=reveal==null?sel.length:reveal,selSet=new Set(sel.slice(0,shown));let svg='';
+ if($('showRej').checked&&reveal==null)rej.forEach(e=>svg+=ln(e,'var(--bad)',1.5,'5 4',.45,'✗ Rejected'));
+ sel.forEach((e,k)=>{if(selSet.has(e))svg+=ln(e,e.fl>60?'var(--warn)':'var(--ok)',4,'',1,'✓ Selected')});
+ V.forEach(v=>svg+=`<g><circle cx="${v.x}" cy="${v.y}" r="${8+Math.sqrt(v.p)/12}" fill="var(--pri)" opacity=".9" stroke="#fff" stroke-width="2"/><text x="${v.x}" y="${v.y-16-Math.sqrt(v.p)/12}" text-anchor="middle" fill="var(--tx)" font-size="12" font-weight="600">${v.n}</text><text x="${v.x}" y="${v.y+4}" text-anchor="middle" font-size="9" fill="#fff">${v.h?'H':''}${v.s?'S':''}${v.i?'I':''}${v.e?'E':''}</text></g>`);
+ $('map').innerHTML=svg;
+ $('map').querySelectorAll('[data-t]').forEach(el=>{el.onmousemove=ev=>{const t=$('tip');t.style.display='block';t.style.left=ev.clientX+12+'px';t.style.top=ev.clientY+12+'px';t.innerHTML=el.dataset.t};el.onmouseleave=()=>$('tip').style.display='none'});
+ // explanations
+ $('ex').innerHTML=sel.map(e=>`<div><b>✓ ${nm(e.a)}–${nm(e.b)}</b> <span class="tag">₹${fmt(e.eff)}L</span><br>Selected because it ${e.rs.join(', ')}.${e.fl>60&&e.alt?`<br>Safer alternative: ${nm(e.alt.a)}–${nm(e.alt.b)} (flood ${e.alt.fl}%, ₹${fmt(e.alt.eff)}L).`:''}</div>`).join('')+rej.map(e=>`<div class="r"><b>✗ ${nm(e.a)}–${nm(e.b)}</b> <span class="tag">₹${fmt(e.eff)}L</span><br>${e.why}</div>`).join('');
+ // priority
+ const pr=sel.map(e=>({e,s:sc(V[e.a])+sc(V[e.b])})).sort((x,y)=>y.s-x.s);
+ $('pri').innerHTML=pr.slice(0,5).map((x,i)=>`<div class="row"><span class="l">#${i+1}</span><span>${nm(x.e.a)}–${nm(x.e.b)} <span class="tag">score ${fmt(x.s)}</span></span></div>`).join('')+`<p style="font-size:12px;color:var(--mu)">Build these first: they reach hospitals, schools, emergency centres, industry and larger populations.</p>`;
+ const dang=R.filter(r=>r.fl>=55||r.fl*wx>40);
+ $('wxl').innerHTML=dang.map(r=>`<div class="row"><span class="l" style="color:var(--bad)">⚠ ${r.fl}%</span>${nm(r.a)}–${nm(r.b)} ${sel.some(e=>e.a==r.a&&e.b==r.b)?'<span class="tag">in plan</span>':''}</div>`).join('')||'No high‑risk roads.';
+ // env
+ $('env').innerHTML=`Road length: <b>${len} km</b><br>Trees removed: <b>${Math.round(trees).toLocaleString()}</b><br>CO₂ produced: <b>${Math.round(co2).toLocaleString()} t</b><br>Green score: <b>${green}/100</b><br>Suggested plantation: <b>${Math.round(trees*3).toLocaleString()} saplings</b> (3:1 offset)`;
+ const avg=total/sel.length,vl=V.length;
+ $('fut').innerHTML=`Each new village needs ≥1 extra road ≈ <b>₹${fmt(avg*1.15)}L</b> (avg + 15% inflation). Expanding by 3 villages: <b>${3} roads, ≈ ₹${fmt(avg*1.15*3)}L</b>. Complexity: <b>${vl>12?'High':vl>7?'Medium':'Low'}</b> (MST needs V−1 edges).`;
+ // analytics
+ const bars=(t,arr,col)=>`<b style="font-size:12px">${t}</b>`+arr.map(([l,v,mx])=>`<div class="row"><span class="l">${l}</span><div class="bar"><i style="width:${v/mx*100}%;background:${col}"></i></div><span>${fmt(v)}</span></div>`).join('');
+ const mc=Math.max(...sel.map(e=>e.eff)),mm=Math.max(...sel.map(e=>e.m));
+ $('an').innerHTML=bars('Construction cost',sel.map(e=>[nm(e.a).slice(0,4)+'–'+nm(e.b).slice(0,4),e.eff,mc]),'var(--pri)')+'<br>'+bars('Flood risk %',sel.map(e=>[nm(e.a).slice(0,4)+'–'+nm(e.b).slice(0,4),e.fl,100]),'var(--warn)')+'<br>'+bars('Maintenance',sel.map(e=>[nm(e.a).slice(0,4)+'–'+nm(e.b).slice(0,4),e.m,mm]),'var(--ok)')+`<br>${bars('Population coverage',[['Covered',V.filter((v,i)=>sel.some(e=>e.a==i||e.b==i)).reduce((s,v)=>s+v.p,0),V.reduce((s,v)=>s+v.p,0)]],'var(--ok)')}`;
+ if($('ra').options.length!=V.length){$('ra').innerHTML=$('rb').innerHTML=V.map(v=>`<option value="${v.id}">${v.n}</option>`).join('');$('rb').selectedIndex=1}
+ $('rl').innerHTML=R.map((r,i)=>{const on=sel.some(e=>e.i==i);return `<div class="row"><span class="l" style="color:var(--${on?'ok':'bad'})">${on?'✓ built':'✗ skipped'}</span><span style="flex:1">${nm(r.a)}–${nm(r.b)} <span class="tag">₹${r.cost}L · fl ${r.fl}%</span></span><button class="alt" onclick="delRoad(${i})">✕</button></div>`}).join('');
+}
+function ln(e,c,w,d,o,l){const A=V[e.a],B=V[e.b];return `<line data-t="<b>${nm(e.a)}–${nm(e.b)}</b> ${l}<br>Cost ₹${fmt(e.eff)}L · Quality ${e.q}/10<br>Flood ${e.fl}% · Maint. ${e.m}" x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="${c}" stroke-width="${w}" stroke-dasharray="${d}" opacity="${o}" stroke-linecap="round" style="cursor:pointer"/>`}
+let anim=null;
+function animateMST(){
+ if(anim){clearInterval(anim);anim=null}
+ solve();const n=S.sel.length;reveal=0;render();$('cap').style.display='block';$('cap').textContent='Starting: all roads hidden. Kruskal adds the cheapest non-cycle road first…';
+ $('animBtn').disabled=true;$('animBtn').textContent='⏳ Animating…';
+ anim=setInterval(()=>{reveal++;render();const e=S.sel[reveal-1];
+  $('cap').innerHTML=`<b>Step ${reveal}/${n}:</b> add ${nm(e.a)}–${nm(e.b)} (₹${fmt(e.eff)}L) — ${e.rs[0]}.`;
+  if(reveal>=n){clearInterval(anim);anim=null;$('cap').innerHTML=`<b>Done:</b> ${n} roads connect all ${V.length} villages for ₹${fmt(S.total)}L.`;
+   setTimeout(()=>{reveal=null;render();$('animBtn').disabled=false;$('animBtn').textContent='▶ Animate MST'},1500)}},900)}
+function say(t,ok){$('msg').style.color=ok?'var(--ok)':'var(--bad)';$('msg').textContent=t}
+function addRoad(){const a=+$('ra').value,b=+$('rb').value,cost=parseFloat($('rc').value),fl=parseFloat($('rf').value);
+ if(a==b)return say('Choose two different villages.');if(!(cost>0))return say('Enter a cost above 0.');if(!(fl>=0&&fl<=100))return say('Flood risk must be 0–100.');
+ R.push({a,b,cost,q:6,fl,m:3,len:15});render();const i=R.length-1,on=S.sel.some(e=>e.i==i);
+ say(on?`Added ${nm(a)}–${nm(b)} and it is now part of the MST.`:`Added ${nm(a)}–${nm(b)}, but it was rejected: ${S.rej.find(e=>e.i==i).why}`,true)}
+function delRoad(i){R.splice(i,1);render();say('Road removed and plan regenerated.',true)}
+function exportJSON(){const u=URL.createObjectURL(new Blob([JSON.stringify({villages:V,roads:R,result:{total:S.total,selected:S.sel.map(e=>[nm(e.a),nm(e.b)])}},null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=u;a.download='smartroad-plan.json';a.click()}
+function reset(){V=JSON.parse(JSON.stringify(V0));R=JSON.parse(JSON.stringify(R0));['mult','wx','minq'].forEach(i=>$(i).value=i=='mult'?1:i=='minq'?1:0);$('budget').value=90;render()}
+// ---------- Rule-based AI assistant (swap for an LLM API on a backend) ----------
+function pickVillages(l){const f=new Set();V.forEach(v=>{const n=v.n.toLowerCase();if(l.includes(n)||l.includes(n.slice(0,5)))f.add(v.id)});
+ const m=l.match(/\b([a-i])\s*(?:-|–|—|to|and)\s*([a-i])\b/);if(m){f.add(m[1].charCodeAt(0)-97);f.add(m[2].charCodeAt(0)-97)}return [...f].filter(x=>x<V.length)}
+function ask(){const q=$('chatq').value.trim();if(!q)return;$('chatq').value='';const c=$('chat');c.innerHTML+=`<p class="u">${q.replace(/</g,'&lt;')}</p>`;const l=q.toLowerCase();let a;
+ const hit=pickVillages(l),pair=r=>hit.length>=2&&[r.a,r.b].includes(hit[0])&&[r.a,r.b].includes(hit[1]);
+ if(hit.length>=2){const e=S.sel.find(pair),r=S.rej.find(pair);
+  a=e?`Yes — ${nm(e.a)}–${nm(e.b)} was selected. It ${e.rs.join(', ')}. In simple terms: it was one of the cheapest ways to link a separate region without wasting money.`:r?`${nm(r.a)}–${nm(r.b)} was rejected. ${r.why}`:`There is no direct road between ${nm(hit[0])} and ${nm(hit[1])} in the dataset. You can add one in the Add Road card.`}
+ else if(hit.length==1){const v=V[hit[0]],es=S.sel.filter(e=>[e.a,e.b].includes(v.id));a=`${v.n} (pop. ${v.p}${v.h?', hospital':''}${v.s?', school':''}${v.e?', emergency centre':''}) is linked by ${es.map(e=>nm(e.a==v.id?e.b:e.a)+' (₹'+fmt(e.eff)+'L)').join(', ')||'no selected road'}.`}
+ else if(/save|saving|cost|cheap|money/.test(l)){const x=[...S.sel].sort((p,r)=>r.eff-p.eff)[0];a=`You already save ₹${fmt(S.saved)}L versus building every road. The costliest selected road is ${nm(x.a)}–${nm(x.b)} (₹${fmt(x.eff)}L); consider bulk contracts or building it last.`}
+ else if(/future|expens|predict|forecast/.test(l))a=`Plan roughly ₹${fmt(S.total*1.15*0.2)}L per year for upkeep and expansion, plus about ₹${fmt(S.total/S.sel.length*1.15)}L for each future village.`;
+ else if(/risk|flood|weather|danger/.test(l))a=`${S.sel.filter(e=>e.fl>60).length} selected roads have flood risk above 60%. Raise "Weather severity" in What‑If to see how the plan shifts.`;
+ else if(/priorit|first|hospital|school/.test(l))a='Check the Priority Planner: it ranks selected roads by the hospitals, schools, industry, emergency centres and population they reach.';
+ else a=`Try: "Why was ${nm(S.sel[0].a)}–${nm(S.sel[0].b)} selected?", "How can I save money?", "What about flood risk?" or "Future expenses?"`;
+ c.innerHTML+=`<p>🤖 ${a}</p>`;c.scrollTop=1e5}
+render();
+</script></body></html>

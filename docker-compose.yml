@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?set a long random SECRET_KEY}
+      MONGO_URI: mongodb://mongo:27017
+    depends_on: [mongo]
+  mongo:
+    image: mongo:7
+    volumes: [mongo_data:/data/db]
+volumes:
+  mongo_data:
